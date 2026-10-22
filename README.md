@@ -5,6 +5,8 @@ Fleet monitoring for RHEL KVM hypervisors with
 from the RHEL AppStream repo. It works on bootc / image-mode hosts as well as
 on package-mode RHEL.
 
+![Ops Status dashboard: overall fleet status, site maps, hypervisor tiles, issue lists and throughput](docs/images/ops-status.png)
+
 Every hypervisor runs the PCP collector. One of them (the *collector*) also
 logs every hypervisor centrally into Valkey and serves Grafana. Three
 dashboards cover three audiences:
@@ -17,6 +19,22 @@ dashboards cover three audiences:
 
 The PCP-shipped dashboards (PCP Vector / PCP Redis *Host Overview*) are
 provisioned too.
+
+### Screenshots
+
+These come from a two-hypervisor lab running demo VMs, with two problems
+created on purpose: an autostart VM shut down, and a VM pinned at 100% CPU.
+
+**Fleet Health:** outliers first. The down VM is flagged *should be running*,
+the hot VM appears under sustained high CPU, and a VM state timeline sits
+below.
+
+![Fleet Health dashboard](docs/images/fleet-health.png)
+
+**Hypervisor & VM Overview:** the fleet table with Cockpit links, then one
+hypervisor in detail, with a live per-VM table and per-VM trends.
+
+![Hypervisor & VM Overview dashboard](docs/images/hypervisor-vm-overview.png)
 
 > This started from Red Hat's blog series
 > [Visualizing system performance with RHEL 8 using PCP and Grafana](https://www.redhat.com/en/blog/visualizing-system-performance-rhel-8-using-performance-co-pilot-pcp-and-grafana-part-1)
