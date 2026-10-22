@@ -1,0 +1,3964 @@
+{
+  "uid": "ops-status",
+  "title": "Ops Status",
+  "description": "At-a-glance status of the hypervisor fleet, for managers and wall screens.",
+  "tags": [
+    "pcp",
+    "ops",
+    "status"
+  ],
+  "timezone": "browser",
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "30s",
+  "time": {
+    "from": "now-24h",
+    "to": "now"
+  },
+  "timepicker": {
+    "hidden": true
+  },
+  "schemaVersion": 38,
+  "version": 1,
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "label": "Datasource",
+        "type": "datasource",
+        "query": "pcp-redis-datasource",
+        "current": {
+          "text": "PCP Redis",
+          "value": "PCP Redis"
+        },
+        "hide": 2,
+        "refresh": 1,
+        "regex": "",
+        "options": []
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "Fleet Health",
+      "type": "link",
+      "icon": "dashboard",
+      "url": "/d/fleet-health/fleet-health"
+    },
+    {
+      "title": "Hypervisor & VM Overview",
+      "type": "link",
+      "icon": "dashboard",
+      "url": "/d/hv-vm-overview/hypervisor-and-vm-overview"
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "stat",
+      "title": "Fleet status",
+      "description": "Worst current condition across all hypervisors and VMs. Service impacted: a hypervisor is offline or an autostart VM is down. Attention: a VM or hypervisor is over a CPU/memory threshold or dropping packets.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 6,
+        "h": 6
+      },
+      "targets": [
+        {
+          "refId": "Aq",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "openmetrics.pcp_hosts.hosts_down",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "Ar",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "reduce",
+          "expression": "Aq",
+          "reducer": "last",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "hide": true
+        },
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "math",
+          "expression": "($Ar > 0) * 2"
+        },
+        {
+          "refId": "Bq",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "openmetrics.libvirt_vms.vms_down_autostart",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "Br",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "reduce",
+          "expression": "Bq",
+          "reducer": "last",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "hide": true
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "math",
+          "expression": "($Br > 0) * 2"
+        },
+        {
+          "refId": "Cq",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.vm.cpu.util",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "Cr",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "reduce",
+          "expression": "Cq",
+          "reducer": "mean",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "hide": true
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "math",
+          "expression": "($Cr >= 85) * 1"
+        },
+        {
+          "refId": "Dq",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.vm.mem.util",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "Dr",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "reduce",
+          "expression": "Dq",
+          "reducer": "last",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "hide": true
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "math",
+          "expression": "($Dr >= 90) * 1"
+        },
+        {
+          "refId": "Eq",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "libvirt.domstats.net.all.rx.drop",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "Er",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "reduce",
+          "expression": "Eq",
+          "reducer": "max",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "hide": true
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "math",
+          "expression": "($Er > 0) * 1"
+        },
+        {
+          "refId": "Fq",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "libvirt.domstats.net.all.tx.drop",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "Fr",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "reduce",
+          "expression": "Fq",
+          "reducer": "max",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "hide": true
+        },
+        {
+          "refId": "F",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "math",
+          "expression": "($Fr > 0) * 1"
+        },
+        {
+          "refId": "Gq",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.cpu.util",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "Gr",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "reduce",
+          "expression": "Gq",
+          "reducer": "last",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "hide": true
+        },
+        {
+          "refId": "G",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "math",
+          "expression": "($Gr >= 80) * 1"
+        },
+        {
+          "refId": "Hq",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.mem.util",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "Hr",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "reduce",
+          "expression": "Hq",
+          "reducer": "last",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "hide": true
+        },
+        {
+          "refId": "H",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "math",
+          "expression": "($Hr >= 80) * 1"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "mode": "seriesToRows",
+            "includeTimeField": false,
+            "labelsToFields": false
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "max"
+          ],
+          "fields": "/^Last \\*$/",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "text": {
+          "valueSize": 34,
+          "titleSize": 13
+        },
+        "wideLayout": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#898781",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": {
+                  "text": "✓  All systems normal",
+                  "color": "#0ca30c",
+                  "index": 0
+                },
+                "1": {
+                  "text": "⚠  Attention needed",
+                  "color": "#fab219",
+                  "index": 1
+                },
+                "2": {
+                  "text": "✕  Service impacted",
+                  "color": "#d03b3b",
+                  "index": 2
+                }
+              }
+            }
+          ],
+          "noValue": "No data"
+        },
+        "overrides": []
+      },
+      "timeFrom": "15m",
+      "hideTimeOverride": true
+    },
+    {
+      "id": 2,
+      "type": "stat",
+      "title": "Hypervisors online",
+      "description": "Hypervisors reachable from the collector.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 6,
+        "w": 3,
+        "h": 3
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "openmetrics.pcp_hosts.hosts_up",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": false
+        }
+      ],
+      "transformations": [],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "text": {
+          "valueSize": 36,
+          "titleSize": 13
+        },
+        "wideLayout": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#2a78d6",
+                "value": null
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "timeFrom": "24h",
+      "hideTimeOverride": true
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "VMs running",
+      "description": "Running VMs across all hypervisors.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 3,
+        "y": 6,
+        "w": 3,
+        "h": 3
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "openmetrics.pcp_hosts.fleet_vms_running",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": false
+        }
+      ],
+      "transformations": [],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "text": {
+          "valueSize": 36,
+          "titleSize": 13
+        },
+        "wideLayout": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#6250d6",
+                "value": null
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "timeFrom": "24h",
+      "hideTimeOverride": true
+    },
+    {
+      "id": 4,
+      "type": "stat",
+      "title": "VMs down",
+      "description": "Autostart VMs that are not running.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 9,
+        "w": 3,
+        "h": 3
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "openmetrics.pcp_hosts.fleet_vms_down",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": false
+        }
+      ],
+      "transformations": [],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "text": {
+          "valueSize": 36,
+          "titleSize": 13
+        },
+        "wideLayout": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0ca30c",
+                "value": null
+              },
+              {
+                "color": "#d03b3b",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "✕  1",
+                  "color": "#d03b3b",
+                  "index": 1
+                },
+                "2": {
+                  "text": "✕  2",
+                  "color": "#d03b3b",
+                  "index": 2
+                },
+                "3": {
+                  "text": "✕  3",
+                  "color": "#d03b3b",
+                  "index": 3
+                },
+                "4": {
+                  "text": "✕  4",
+                  "color": "#d03b3b",
+                  "index": 4
+                },
+                "5": {
+                  "text": "✕  5",
+                  "color": "#d03b3b",
+                  "index": 5
+                },
+                "6": {
+                  "text": "✕  6",
+                  "color": "#d03b3b",
+                  "index": 6
+                },
+                "7": {
+                  "text": "✕  7",
+                  "color": "#d03b3b",
+                  "index": 7
+                },
+                "8": {
+                  "text": "✕  8",
+                  "color": "#d03b3b",
+                  "index": 8
+                },
+                "9": {
+                  "text": "✕  9",
+                  "color": "#d03b3b",
+                  "index": 9
+                },
+                "10": {
+                  "text": "✕  10",
+                  "color": "#d03b3b",
+                  "index": 10
+                },
+                "11": {
+                  "text": "✕  11",
+                  "color": "#d03b3b",
+                  "index": 11
+                },
+                "12": {
+                  "text": "✕  12",
+                  "color": "#d03b3b",
+                  "index": 12
+                },
+                "13": {
+                  "text": "✕  13",
+                  "color": "#d03b3b",
+                  "index": 13
+                },
+                "14": {
+                  "text": "✕  14",
+                  "color": "#d03b3b",
+                  "index": 14
+                },
+                "15": {
+                  "text": "✕  15",
+                  "color": "#d03b3b",
+                  "index": 15
+                },
+                "16": {
+                  "text": "✕  16",
+                  "color": "#d03b3b",
+                  "index": 16
+                },
+                "17": {
+                  "text": "✕  17",
+                  "color": "#d03b3b",
+                  "index": 17
+                },
+                "18": {
+                  "text": "✕  18",
+                  "color": "#d03b3b",
+                  "index": 18
+                },
+                "19": {
+                  "text": "✕  19",
+                  "color": "#d03b3b",
+                  "index": 19
+                },
+                "20": {
+                  "text": "✕  20",
+                  "color": "#d03b3b",
+                  "index": 20
+                },
+                "21": {
+                  "text": "✕  21",
+                  "color": "#d03b3b",
+                  "index": 21
+                },
+                "22": {
+                  "text": "✕  22",
+                  "color": "#d03b3b",
+                  "index": 22
+                },
+                "23": {
+                  "text": "✕  23",
+                  "color": "#d03b3b",
+                  "index": 23
+                },
+                "24": {
+                  "text": "✕  24",
+                  "color": "#d03b3b",
+                  "index": 24
+                },
+                "25": {
+                  "text": "✕  25",
+                  "color": "#d03b3b",
+                  "index": 25
+                },
+                "26": {
+                  "text": "✕  26",
+                  "color": "#d03b3b",
+                  "index": 26
+                },
+                "27": {
+                  "text": "✕  27",
+                  "color": "#d03b3b",
+                  "index": 27
+                },
+                "28": {
+                  "text": "✕  28",
+                  "color": "#d03b3b",
+                  "index": 28
+                },
+                "29": {
+                  "text": "✕  29",
+                  "color": "#d03b3b",
+                  "index": 29
+                },
+                "30": {
+                  "text": "✕  30",
+                  "color": "#d03b3b",
+                  "index": 30
+                },
+                "31": {
+                  "text": "✕  31",
+                  "color": "#d03b3b",
+                  "index": 31
+                },
+                "32": {
+                  "text": "✕  32",
+                  "color": "#d03b3b",
+                  "index": 32
+                },
+                "33": {
+                  "text": "✕  33",
+                  "color": "#d03b3b",
+                  "index": 33
+                },
+                "34": {
+                  "text": "✕  34",
+                  "color": "#d03b3b",
+                  "index": 34
+                },
+                "35": {
+                  "text": "✕  35",
+                  "color": "#d03b3b",
+                  "index": 35
+                },
+                "36": {
+                  "text": "✕  36",
+                  "color": "#d03b3b",
+                  "index": 36
+                },
+                "37": {
+                  "text": "✕  37",
+                  "color": "#d03b3b",
+                  "index": 37
+                },
+                "38": {
+                  "text": "✕  38",
+                  "color": "#d03b3b",
+                  "index": 38
+                },
+                "39": {
+                  "text": "✕  39",
+                  "color": "#d03b3b",
+                  "index": 39
+                },
+                "40": {
+                  "text": "✕  40",
+                  "color": "#d03b3b",
+                  "index": 40
+                },
+                "41": {
+                  "text": "✕  41",
+                  "color": "#d03b3b",
+                  "index": 41
+                },
+                "42": {
+                  "text": "✕  42",
+                  "color": "#d03b3b",
+                  "index": 42
+                },
+                "43": {
+                  "text": "✕  43",
+                  "color": "#d03b3b",
+                  "index": 43
+                },
+                "44": {
+                  "text": "✕  44",
+                  "color": "#d03b3b",
+                  "index": 44
+                },
+                "45": {
+                  "text": "✕  45",
+                  "color": "#d03b3b",
+                  "index": 45
+                },
+                "46": {
+                  "text": "✕  46",
+                  "color": "#d03b3b",
+                  "index": 46
+                },
+                "47": {
+                  "text": "✕  47",
+                  "color": "#d03b3b",
+                  "index": 47
+                },
+                "48": {
+                  "text": "✕  48",
+                  "color": "#d03b3b",
+                  "index": 48
+                },
+                "49": {
+                  "text": "✕  49",
+                  "color": "#d03b3b",
+                  "index": 49
+                },
+                "50": {
+                  "text": "✕  50",
+                  "color": "#d03b3b",
+                  "index": 50
+                },
+                "0": {
+                  "text": "✓  0",
+                  "color": "#0ca30c",
+                  "index": 0
+                }
+              }
+            },
+            {
+              "type": "range",
+              "options": {
+                "from": 51,
+                "to": null,
+                "result": {
+                  "text": "✕  50+",
+                  "color": "#d03b3b",
+                  "index": 51
+                }
+              }
+            }
+          ]
+        },
+        "overrides": []
+      },
+      "timeFrom": "24h",
+      "hideTimeOverride": true
+    },
+    {
+      "id": 5,
+      "type": "stat",
+      "title": "Warnings",
+      "description": "VMs/hypervisors over CPU or memory thresholds, or dropping packets (see Warnings below).",
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "gridPos": {
+        "x": 3,
+        "y": 9,
+        "w": 3,
+        "h": 3
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 900,
+          "withTransforms": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "mode": "seriesToRows",
+            "includeTimeField": false,
+            "labelsToFields": true
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "type": "include",
+            "match": "all",
+            "filters": [
+              {
+                "fieldName": "Field",
+                "config": {
+                  "id": "regex",
+                  "options": {
+                    "value": "^(C|D|E|F|G|H)$"
+                  }
+                }
+              },
+              {
+                "fieldName": "Last *",
+                "config": {
+                  "id": "greater",
+                  "options": {
+                    "value": 0
+                  }
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "count"
+          ],
+          "fields": "/^Last \\*$/",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "text": {
+          "valueSize": 36,
+          "titleSize": 13
+        },
+        "wideLayout": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0ca30c",
+                "value": null
+              },
+              {
+                "color": "#fab219",
+                "value": 1
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "⚠  1",
+                  "color": "#fab219",
+                  "index": 1
+                },
+                "2": {
+                  "text": "⚠  2",
+                  "color": "#fab219",
+                  "index": 2
+                },
+                "3": {
+                  "text": "⚠  3",
+                  "color": "#fab219",
+                  "index": 3
+                },
+                "4": {
+                  "text": "⚠  4",
+                  "color": "#fab219",
+                  "index": 4
+                },
+                "5": {
+                  "text": "⚠  5",
+                  "color": "#fab219",
+                  "index": 5
+                },
+                "6": {
+                  "text": "⚠  6",
+                  "color": "#fab219",
+                  "index": 6
+                },
+                "7": {
+                  "text": "⚠  7",
+                  "color": "#fab219",
+                  "index": 7
+                },
+                "8": {
+                  "text": "⚠  8",
+                  "color": "#fab219",
+                  "index": 8
+                },
+                "9": {
+                  "text": "⚠  9",
+                  "color": "#fab219",
+                  "index": 9
+                },
+                "10": {
+                  "text": "⚠  10",
+                  "color": "#fab219",
+                  "index": 10
+                },
+                "11": {
+                  "text": "⚠  11",
+                  "color": "#fab219",
+                  "index": 11
+                },
+                "12": {
+                  "text": "⚠  12",
+                  "color": "#fab219",
+                  "index": 12
+                },
+                "13": {
+                  "text": "⚠  13",
+                  "color": "#fab219",
+                  "index": 13
+                },
+                "14": {
+                  "text": "⚠  14",
+                  "color": "#fab219",
+                  "index": 14
+                },
+                "15": {
+                  "text": "⚠  15",
+                  "color": "#fab219",
+                  "index": 15
+                },
+                "16": {
+                  "text": "⚠  16",
+                  "color": "#fab219",
+                  "index": 16
+                },
+                "17": {
+                  "text": "⚠  17",
+                  "color": "#fab219",
+                  "index": 17
+                },
+                "18": {
+                  "text": "⚠  18",
+                  "color": "#fab219",
+                  "index": 18
+                },
+                "19": {
+                  "text": "⚠  19",
+                  "color": "#fab219",
+                  "index": 19
+                },
+                "20": {
+                  "text": "⚠  20",
+                  "color": "#fab219",
+                  "index": 20
+                },
+                "21": {
+                  "text": "⚠  21",
+                  "color": "#fab219",
+                  "index": 21
+                },
+                "22": {
+                  "text": "⚠  22",
+                  "color": "#fab219",
+                  "index": 22
+                },
+                "23": {
+                  "text": "⚠  23",
+                  "color": "#fab219",
+                  "index": 23
+                },
+                "24": {
+                  "text": "⚠  24",
+                  "color": "#fab219",
+                  "index": 24
+                },
+                "25": {
+                  "text": "⚠  25",
+                  "color": "#fab219",
+                  "index": 25
+                },
+                "26": {
+                  "text": "⚠  26",
+                  "color": "#fab219",
+                  "index": 26
+                },
+                "27": {
+                  "text": "⚠  27",
+                  "color": "#fab219",
+                  "index": 27
+                },
+                "28": {
+                  "text": "⚠  28",
+                  "color": "#fab219",
+                  "index": 28
+                },
+                "29": {
+                  "text": "⚠  29",
+                  "color": "#fab219",
+                  "index": 29
+                },
+                "30": {
+                  "text": "⚠  30",
+                  "color": "#fab219",
+                  "index": 30
+                },
+                "31": {
+                  "text": "⚠  31",
+                  "color": "#fab219",
+                  "index": 31
+                },
+                "32": {
+                  "text": "⚠  32",
+                  "color": "#fab219",
+                  "index": 32
+                },
+                "33": {
+                  "text": "⚠  33",
+                  "color": "#fab219",
+                  "index": 33
+                },
+                "34": {
+                  "text": "⚠  34",
+                  "color": "#fab219",
+                  "index": 34
+                },
+                "35": {
+                  "text": "⚠  35",
+                  "color": "#fab219",
+                  "index": 35
+                },
+                "36": {
+                  "text": "⚠  36",
+                  "color": "#fab219",
+                  "index": 36
+                },
+                "37": {
+                  "text": "⚠  37",
+                  "color": "#fab219",
+                  "index": 37
+                },
+                "38": {
+                  "text": "⚠  38",
+                  "color": "#fab219",
+                  "index": 38
+                },
+                "39": {
+                  "text": "⚠  39",
+                  "color": "#fab219",
+                  "index": 39
+                },
+                "40": {
+                  "text": "⚠  40",
+                  "color": "#fab219",
+                  "index": 40
+                },
+                "41": {
+                  "text": "⚠  41",
+                  "color": "#fab219",
+                  "index": 41
+                },
+                "42": {
+                  "text": "⚠  42",
+                  "color": "#fab219",
+                  "index": 42
+                },
+                "43": {
+                  "text": "⚠  43",
+                  "color": "#fab219",
+                  "index": 43
+                },
+                "44": {
+                  "text": "⚠  44",
+                  "color": "#fab219",
+                  "index": 44
+                },
+                "45": {
+                  "text": "⚠  45",
+                  "color": "#fab219",
+                  "index": 45
+                },
+                "46": {
+                  "text": "⚠  46",
+                  "color": "#fab219",
+                  "index": 46
+                },
+                "47": {
+                  "text": "⚠  47",
+                  "color": "#fab219",
+                  "index": 47
+                },
+                "48": {
+                  "text": "⚠  48",
+                  "color": "#fab219",
+                  "index": 48
+                },
+                "49": {
+                  "text": "⚠  49",
+                  "color": "#fab219",
+                  "index": 49
+                },
+                "50": {
+                  "text": "⚠  50",
+                  "color": "#fab219",
+                  "index": 50
+                },
+                "0": {
+                  "text": "✓  0",
+                  "color": "#0ca30c",
+                  "index": 0
+                }
+              }
+            },
+            {
+              "type": "range",
+              "options": {
+                "from": 51,
+                "to": null,
+                "result": {
+                  "text": "⚠  50+",
+                  "color": "#fab219",
+                  "index": 51
+                }
+              }
+            }
+          ],
+          "noValue": "✓  0"
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "type": "geomap",
+      "title": "Sites",
+      "description": "Hypervisor sites, coloured by the worst hypervisor at each site: green healthy, red when a hypervisor is offline or has autostart VMs down. Locations come from sites.json on the collector.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 0,
+        "w": 11,
+        "h": 12
+      },
+      "timeFrom": "2m",
+      "hideTimeOverride": true,
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "openmetrics.pcp_hosts.status",
+          "format": "time_series",
+          "legendFormat": "$instance",
+          "hide": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "mode": "seriesToRows",
+            "includeTimeField": false,
+            "labelsToFields": false
+          }
+        },
+        {
+          "id": "extractFields",
+          "options": {
+            "source": "Field",
+            "format": "kvp",
+            "replace": false
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": {},
+            "conversions": [
+              {
+                "targetField": "lat",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "lon",
+                "destinationType": "number"
+              }
+            ]
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "site": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "lat": {
+                "aggregations": [
+                  "first"
+                ],
+                "operation": "aggregate"
+              },
+              "lon": {
+                "aggregations": [
+                  "first"
+                ],
+                "operation": "aggregate"
+              },
+              "Last *": {
+                "aggregations": [
+                  "max"
+                ],
+                "operation": "aggregate"
+              },
+              "host": {
+                "aggregations": [
+                  "count"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "lat (first)": "lat",
+              "lon (first)": "lon",
+              "Last * (max)": "status",
+              "host (count)": "hypervisors"
+            }
+          }
+        }
+      ],
+      "options": {
+        "view": {
+          "id": "coords",
+          "lat": 38.5,
+          "lon": -96.5,
+          "zoom": 3.55
+        },
+        "controls": {
+          "showZoom": false,
+          "mouseWheelZoom": false,
+          "showAttribution": true,
+          "showScale": false,
+          "showMeasure": false,
+          "showDebug": false
+        },
+        "basemap": {
+          "type": "xyz",
+          "name": "Basemap",
+          "config": {
+            "url": "https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+            "attribution": "Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap contributors"
+          }
+        },
+        "layers": [
+          {
+            "type": "xyz",
+            "name": "Labels",
+            "config": {
+              "url": "https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+              "attribution": "Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap contributors"
+            }
+          },
+          {
+            "type": "markers",
+            "name": "Halo",
+            "config": {
+              "showLegend": false,
+              "style": {
+                "color": {
+                  "field": "status",
+                  "fixed": "dark-green"
+                },
+                "opacity": 0.25,
+                "size": {
+                  "fixed": 23.400000000000002,
+                  "min": 2,
+                  "max": 80
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "text": {
+                  "fixed": "",
+                  "mode": "fixed"
+                },
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                }
+              }
+            },
+            "location": {
+              "mode": "coords",
+              "latitude": "lat",
+              "longitude": "lon"
+            },
+            "tooltip": false
+          },
+          {
+            "type": "markers",
+            "name": "Sites",
+            "config": {
+              "showLegend": false,
+              "style": {
+                "color": {
+                  "field": "status",
+                  "fixed": "dark-green"
+                },
+                "opacity": 0.95,
+                "size": {
+                  "fixed": 9,
+                  "min": 2,
+                  "max": 30
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "text": {
+                  "fixed": "",
+                  "mode": "fixed"
+                },
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                }
+              }
+            },
+            "location": {
+              "mode": "coords",
+              "latitude": "lat",
+              "longitude": "lon"
+            },
+            "tooltip": true
+          }
+        ],
+        "tooltip": {
+          "mode": "details"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0ca30c",
+                "value": null
+              },
+              {
+                "color": "#d03b3b",
+                "value": 2
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "✓  Healthy",
+                        "color": "#0ca30c",
+                        "index": 0
+                      },
+                      "2": {
+                        "text": "✕  VMs down",
+                        "color": "#d03b3b",
+                        "index": 1
+                      },
+                      "3": {
+                        "text": "✕  Offline",
+                        "color": "#d03b3b",
+                        "index": 2
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 7,
+      "type": "geomap",
+      "title": "Houston",
+      "description": "Close-up of the Houston site (hypervisor-01, hypervisor-02).",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 17,
+        "y": 0,
+        "w": 7,
+        "h": 12
+      },
+      "timeFrom": "2m",
+      "hideTimeOverride": true,
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "openmetrics.pcp_hosts.status",
+          "format": "time_series",
+          "legendFormat": "$instance",
+          "hide": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "mode": "seriesToRows",
+            "includeTimeField": false,
+            "labelsToFields": false
+          }
+        },
+        {
+          "id": "extractFields",
+          "options": {
+            "source": "Field",
+            "format": "kvp",
+            "replace": false
+          }
+        },
+        {
+          "id": "convertFieldType",
+          "options": {
+            "fields": {},
+            "conversions": [
+              {
+                "targetField": "lat",
+                "destinationType": "number"
+              },
+              {
+                "targetField": "lon",
+                "destinationType": "number"
+              }
+            ]
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "site": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "lat": {
+                "aggregations": [
+                  "first"
+                ],
+                "operation": "aggregate"
+              },
+              "lon": {
+                "aggregations": [
+                  "first"
+                ],
+                "operation": "aggregate"
+              },
+              "Last *": {
+                "aggregations": [
+                  "max"
+                ],
+                "operation": "aggregate"
+              },
+              "host": {
+                "aggregations": [
+                  "count"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "renameByName": {
+              "lat (first)": "lat",
+              "lon (first)": "lon",
+              "Last * (max)": "status",
+              "host (count)": "hypervisors"
+            }
+          }
+        }
+      ],
+      "options": {
+        "view": {
+          "id": "coords",
+          "lat": 29.7604,
+          "lon": -95.3698,
+          "zoom": 10.5
+        },
+        "controls": {
+          "showZoom": false,
+          "mouseWheelZoom": false,
+          "showAttribution": true,
+          "showScale": false,
+          "showMeasure": false,
+          "showDebug": false
+        },
+        "basemap": {
+          "type": "xyz",
+          "name": "Basemap",
+          "config": {
+            "url": "https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}",
+            "attribution": "Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap contributors"
+          }
+        },
+        "layers": [
+          {
+            "type": "xyz",
+            "name": "Labels",
+            "config": {
+              "url": "https://services.arcgisonline.com/arcgis/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}",
+              "attribution": "Tiles © Esri — Esri, HERE, Garmin, © OpenStreetMap contributors"
+            }
+          },
+          {
+            "type": "markers",
+            "name": "Halo",
+            "config": {
+              "showLegend": false,
+              "style": {
+                "color": {
+                  "field": "status",
+                  "fixed": "dark-green"
+                },
+                "opacity": 0.25,
+                "size": {
+                  "fixed": 41.6,
+                  "min": 2,
+                  "max": 80
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "text": {
+                  "fixed": "",
+                  "mode": "fixed"
+                },
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                }
+              }
+            },
+            "location": {
+              "mode": "coords",
+              "latitude": "lat",
+              "longitude": "lon"
+            },
+            "tooltip": false
+          },
+          {
+            "type": "markers",
+            "name": "Sites",
+            "config": {
+              "showLegend": false,
+              "style": {
+                "color": {
+                  "field": "status",
+                  "fixed": "dark-green"
+                },
+                "opacity": 0.95,
+                "size": {
+                  "fixed": 16,
+                  "min": 2,
+                  "max": 30
+                },
+                "symbol": {
+                  "fixed": "img/icons/marker/circle.svg",
+                  "mode": "fixed"
+                },
+                "symbolAlign": {
+                  "horizontal": "center",
+                  "vertical": "center"
+                },
+                "text": {
+                  "fixed": "",
+                  "mode": "fixed"
+                },
+                "rotation": {
+                  "fixed": 0,
+                  "max": 360,
+                  "min": -360,
+                  "mode": "mod"
+                }
+              }
+            },
+            "location": {
+              "mode": "coords",
+              "latitude": "lat",
+              "longitude": "lon"
+            },
+            "tooltip": true
+          }
+        ],
+        "tooltip": {
+          "mode": "details"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0ca30c",
+                "value": null
+              },
+              {
+                "color": "#d03b3b",
+                "value": 2
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "status"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "0": {
+                        "text": "✓  Healthy",
+                        "color": "#0ca30c",
+                        "index": 0
+                      },
+                      "2": {
+                        "text": "✕  VMs down",
+                        "color": "#d03b3b",
+                        "index": 1
+                      },
+                      "3": {
+                        "text": "✕  Offline",
+                        "color": "#d03b3b",
+                        "index": 2
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Hypervisor uptime",
+      "description": "",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 8,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "kernel.all.uptime",
+          "format": "time_series",
+          "legendFormat": "$hostname",
+          "hide": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "mode": "seriesToRows",
+            "includeTimeField": false,
+            "labelsToFields": false
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Field"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "/^Last \\*$/",
+          "values": true
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "text": {
+          "valueSize": 28,
+          "titleSize": 16
+        },
+        "wideLayout": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dtdurations",
+          "decimals": 1,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#2a78d6",
+                "value": null
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "timeFrom": "2m",
+      "hideTimeOverride": true
+    },
+    {
+      "id": 9,
+      "type": "stat",
+      "title": "Hypervisor status  ·  click for Cockpit",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 12,
+        "w": 8,
+        "h": 4
+      },
+      "timeFrom": "2m",
+      "hideTimeOverride": true,
+      "description": "Hypervisor PCP agents as seen from the collector. Click a tile to open that hypervisor's Cockpit for troubleshooting.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "openmetrics.pcp_hosts.up",
+          "format": "time_series",
+          "legendFormat": "$instance"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "mode": "seriesToRows",
+            "includeTimeField": false,
+            "labelsToFields": false
+          }
+        },
+        {
+          "id": "extractFields",
+          "options": {
+            "source": "Field",
+            "format": "kvp",
+            "replace": false
+          }
+        },
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "host",
+                "address",
+                "Last *"
+              ]
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "host": 0,
+              "address": 1,
+              "Last *": 2
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "host"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "/^Last \\*$/",
+          "values": true
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "orientation": "vertical",
+        "text": {
+          "valueSize": 30,
+          "titleSize": 16
+        },
+        "wideLayout": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#898781",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "UP",
+                  "color": "#0ca30c",
+                  "index": 0
+                },
+                "0": {
+                  "text": "DOWN",
+                  "color": "#d03b3b",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "links": [
+            {
+              "title": "Open Cockpit on ${__data.fields.host}",
+              "url": "https://${__data.fields.address}:9090/",
+              "targetBlank": true
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "VMs per hypervisor",
+      "description": "",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 12,
+        "w": 8,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.vms.running",
+          "format": "time_series",
+          "legendFormat": "$hostname",
+          "hide": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "mode": "seriesToRows",
+            "includeTimeField": false,
+            "labelsToFields": false
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Field"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "/^Last \\*$/",
+          "values": true
+        },
+        "colorMode": "background",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "orientation": "auto",
+        "text": {
+          "valueSize": 30,
+          "titleSize": 16
+        },
+        "wideLayout": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#6250d6",
+                "value": null
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "timeFrom": "24h",
+      "hideTimeOverride": true
+    },
+    {
+      "id": 11,
+      "type": "timeseries",
+      "title": "Hypervisor CPU – last 6 hours",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 16,
+        "w": 9,
+        "h": 7
+      },
+      "timeFrom": "6h",
+      "hideTimeOverride": true,
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.cpu.util",
+          "format": "time_series",
+          "legendFormat": "$hostname",
+          "hide": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "decimals": 0,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 30,
+            "gradientMode": "opacity",
+            "showPoints": "never",
+            "spanNulls": 60000,
+            "axisSoftMin": 0,
+            "axisSoftMax": 25,
+            "lineInterpolation": "smooth",
+            "axisBorderShow": false
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hypervisor-01"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3987e5"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hypervisor-02"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#d95926"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 12,
+      "type": "piechart",
+      "title": "VM states",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 9,
+        "y": 16,
+        "w": 6,
+        "h": 7
+      },
+      "timeFrom": "2m",
+      "hideTimeOverride": true,
+      "description": "All defined VMs across the fleet. Stopped = not running and not set to autostart.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "openmetrics.libvirt_vms.vms_running",
+          "format": "time_series",
+          "legendFormat": "Running",
+          "hide": false
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "openmetrics.libvirt_vms.vms_down_autostart",
+          "format": "time_series",
+          "legendFormat": "Down (should be running)",
+          "hide": false
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "openmetrics.libvirt_vms.vms_stopped",
+          "format": "time_series",
+          "legendFormat": "Stopped",
+          "hide": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "mode": "seriesToRows",
+            "includeTimeField": false,
+            "labelsToFields": false
+          }
+        },
+        {
+          "id": "groupBy",
+          "options": {
+            "fields": {
+              "Field": {
+                "aggregations": [],
+                "operation": "groupby"
+              },
+              "Last *": {
+                "aggregations": [
+                  "sum"
+                ],
+                "operation": "aggregate"
+              }
+            }
+          }
+        },
+        {
+          "id": "rowsToFields",
+          "options": {
+            "mappings": [
+              {
+                "fieldName": "Field",
+                "handlerKey": "field.name"
+              },
+              {
+                "fieldName": "Last * (sum)",
+                "handlerKey": "field.value"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "pieType": "donut",
+        "displayLabels": [
+          "value"
+        ],
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "legend": {
+          "displayMode": "table",
+          "placement": "right",
+          "showLegend": true,
+          "values": [
+            "value"
+          ]
+        },
+        "tooltip": {
+          "mode": "single"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Running"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#0ca30c"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Down (should be running)"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#d03b3b"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Stopped"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#898781"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 13,
+      "type": "bargauge",
+      "title": "Busiest VMs (CPU, 15m avg)",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 15,
+        "y": 16,
+        "w": 9,
+        "h": 7
+      },
+      "timeFrom": "15m",
+      "hideTimeOverride": true,
+      "description": "Top VMs fleet-wide by CPU as a % of their own vCPUs. Amber from 85%.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.vm.cpu.util",
+          "format": "time_series",
+          "legendFormat": "$guest_name · $hostname",
+          "hide": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "mean"
+            ],
+            "mode": "seriesToRows",
+            "includeTimeField": false,
+            "labelsToFields": false
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Mean",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitField": 6
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "/^Mean$/",
+          "values": true
+        },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "valueMode": "color",
+        "showUnfilled": true,
+        "namePlacement": "left",
+        "sizing": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#2a78d6",
+                "value": null
+              },
+              {
+                "color": "#fab219",
+                "value": 85
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 900,
+      "type": "stat",
+      "title": "Service-impacting issues",
+      "description": "Hypervisors offline and autostart VMs that are down. The value is the count.",
+      "gridPos": {
+        "x": 0,
+        "y": 23,
+        "w": 12,
+        "h": 6
+      },
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "mode": "seriesToRows",
+            "includeTimeField": false,
+            "labelsToFields": true
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "type": "include",
+            "match": "all",
+            "filters": [
+              {
+                "fieldName": "Field",
+                "config": {
+                  "id": "regex",
+                  "options": {
+                    "value": "^(A|B)$"
+                  }
+                }
+              },
+              {
+                "fieldName": "Last *",
+                "config": {
+                  "id": "greater",
+                  "options": {
+                    "value": 0
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "Field",
+                "guest_name",
+                "hostname",
+                "Last *"
+              ]
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Field": 0,
+              "guest_name": 1,
+              "hostname": 2
+            }
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "/^Last \\*$/",
+          "values": true
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "orientation": "horizontal",
+        "text": {
+          "valueSize": 20,
+          "titleSize": 16
+        },
+        "wideLayout": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "✓  None",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0ca30c",
+                "value": null
+              },
+              {
+                "color": "#d03b3b",
+                "value": 1e-09
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Field"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "A": {
+                        "text": "✕  Hypervisor offline (count)",
+                        "index": 0
+                      },
+                      "B": {
+                        "text": "✕  VMs down that should be running (count)",
+                        "index": 1
+                      },
+                      "C": {
+                        "text": "⚠  VM CPU high (15m avg, %)",
+                        "index": 2
+                      },
+                      "D": {
+                        "text": "⚠  VM memory high (% of assigned)",
+                        "index": 3
+                      },
+                      "E": {
+                        "text": "⚠  VM dropping packets in (pkts/s)",
+                        "index": 4
+                      },
+                      "F": {
+                        "text": "⚠  VM dropping packets out (pkts/s)",
+                        "index": 5
+                      },
+                      "G": {
+                        "text": "⚠  Hypervisor CPU high (%)",
+                        "index": 6
+                      },
+                      "H": {
+                        "text": "⚠  Hypervisor memory high (%)",
+                        "index": 7
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guest_name"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "regex",
+                    "options": {
+                      "pattern": "(.+)",
+                      "result": {
+                        "text": "·  $1",
+                        "index": 0
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "noValue",
+                "value": "​"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hostname"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "regex",
+                    "options": {
+                      "pattern": "(.+)",
+                      "result": {
+                        "text": "·  $1",
+                        "index": 0
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "noValue",
+                "value": "​"
+              }
+            ]
+          }
+        ]
+      },
+      "links": [
+        {
+          "title": "Fleet Health",
+          "url": "/d/fleet-health/fleet-health"
+        }
+      ],
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "targets": [
+        {
+          "refId": "Aq",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "openmetrics.pcp_hosts.hosts_down",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "Ar",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "reduce",
+          "expression": "Aq",
+          "reducer": "last",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "hide": true
+        },
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "math",
+          "expression": "($Ar > 0) * $Ar"
+        },
+        {
+          "refId": "Bq",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "openmetrics.libvirt_vms.vms_down_autostart",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "Br",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "reduce",
+          "expression": "Bq",
+          "reducer": "last",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "hide": true
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "math",
+          "expression": "($Br > 0) * $Br"
+        },
+        {
+          "refId": "Cq",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.vm.cpu.util",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "Cr",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "reduce",
+          "expression": "Cq",
+          "reducer": "mean",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "hide": true
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "math",
+          "expression": "($Cr >= 85) * $Cr"
+        },
+        {
+          "refId": "Dq",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.vm.mem.util",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "Dr",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "reduce",
+          "expression": "Dq",
+          "reducer": "last",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "hide": true
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "math",
+          "expression": "($Dr >= 90) * $Dr"
+        },
+        {
+          "refId": "Eq",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "libvirt.domstats.net.all.rx.drop",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "Er",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "reduce",
+          "expression": "Eq",
+          "reducer": "max",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "hide": true
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "math",
+          "expression": "($Er > 0) * $Er"
+        },
+        {
+          "refId": "Fq",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "libvirt.domstats.net.all.tx.drop",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "Fr",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "reduce",
+          "expression": "Fq",
+          "reducer": "max",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "hide": true
+        },
+        {
+          "refId": "F",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "math",
+          "expression": "($Fr > 0) * $Fr"
+        },
+        {
+          "refId": "Gq",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.cpu.util",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "Gr",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "reduce",
+          "expression": "Gq",
+          "reducer": "last",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "hide": true
+        },
+        {
+          "refId": "G",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "math",
+          "expression": "($Gr >= 80) * $Gr"
+        },
+        {
+          "refId": "Hq",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.mem.util",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "Hr",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "reduce",
+          "expression": "Hq",
+          "reducer": "last",
+          "settings": {
+            "mode": "dropNN"
+          },
+          "hide": true
+        },
+        {
+          "refId": "H",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "math",
+          "expression": "($Hr >= 80) * $Hr"
+        }
+      ],
+      "timeFrom": "15m",
+      "hideTimeOverride": true
+    },
+    {
+      "id": 14,
+      "type": "stat",
+      "title": "Warnings",
+      "description": "VMs or hypervisors over threshold (VM CPU ≥ 85% over 15m, VM memory ≥ 90%, hypervisor CPU/memory ≥ 80%) or dropping packets. The value is the measured figure (% or packets/s).",
+      "gridPos": {
+        "x": 12,
+        "y": 23,
+        "w": 12,
+        "h": 6
+      },
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "mode": "seriesToRows",
+            "includeTimeField": false,
+            "labelsToFields": true
+          }
+        },
+        {
+          "id": "filterByValue",
+          "options": {
+            "type": "include",
+            "match": "all",
+            "filters": [
+              {
+                "fieldName": "Field",
+                "config": {
+                  "id": "regex",
+                  "options": {
+                    "value": "^(C|D|E|F|G|H)$"
+                  }
+                }
+              },
+              {
+                "fieldName": "Last *",
+                "config": {
+                  "id": "greater",
+                  "options": {
+                    "value": 0
+                  }
+                }
+              }
+            ]
+          }
+        },
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "Field",
+                "guest_name",
+                "hostname",
+                "Last *"
+              ]
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "Field": 0,
+              "guest_name": 1,
+              "hostname": 2
+            }
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "/^Last \\*$/",
+          "values": true
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "auto",
+        "textMode": "value_and_name",
+        "orientation": "horizontal",
+        "text": {
+          "valueSize": 20,
+          "titleSize": 16
+        },
+        "wideLayout": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "decimals": 0,
+          "noValue": "✓  None",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#0ca30c",
+                "value": null
+              },
+              {
+                "color": "#fab219",
+                "value": 1e-09
+              }
+            ]
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Field"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "value",
+                    "options": {
+                      "A": {
+                        "text": "✕  Hypervisor offline (count)",
+                        "index": 0
+                      },
+                      "B": {
+                        "text": "✕  VMs down that should be running (count)",
+                        "index": 1
+                      },
+                      "C": {
+                        "text": "⚠  VM CPU high (15m avg, %)",
+                        "index": 2
+                      },
+                      "D": {
+                        "text": "⚠  VM memory high (% of assigned)",
+                        "index": 3
+                      },
+                      "E": {
+                        "text": "⚠  VM dropping packets in (pkts/s)",
+                        "index": 4
+                      },
+                      "F": {
+                        "text": "⚠  VM dropping packets out (pkts/s)",
+                        "index": 5
+                      },
+                      "G": {
+                        "text": "⚠  Hypervisor CPU high (%)",
+                        "index": 6
+                      },
+                      "H": {
+                        "text": "⚠  Hypervisor memory high (%)",
+                        "index": 7
+                      }
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "guest_name"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "regex",
+                    "options": {
+                      "pattern": "(.+)",
+                      "result": {
+                        "text": "·  $1",
+                        "index": 0
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "noValue",
+                "value": "​"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "hostname"
+            },
+            "properties": [
+              {
+                "id": "mappings",
+                "value": [
+                  {
+                    "type": "regex",
+                    "options": {
+                      "pattern": "(.+)",
+                      "result": {
+                        "text": "·  $1",
+                        "index": 0
+                      }
+                    }
+                  }
+                ]
+              },
+              {
+                "id": "noValue",
+                "value": "​"
+              }
+            ]
+          }
+        ]
+      },
+      "links": [
+        {
+          "title": "Fleet Health",
+          "url": "/d/fleet-health/fleet-health"
+        }
+      ],
+      "datasource": {
+        "type": "datasource",
+        "uid": "-- Dashboard --"
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "datasource",
+            "uid": "-- Dashboard --"
+          },
+          "panelId": 900,
+          "withTransforms": false
+        }
+      ]
+    },
+    {
+      "id": 15,
+      "type": "stat",
+      "title": "Hypervisor CPU (avg)",
+      "description": "Average non-idle CPU across hypervisors, last 6 hours. Amber from 80%, red from 90%.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 29,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.cpu.util",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "resample",
+          "expression": "A",
+          "window": "2m",
+          "downsampler": "mean",
+          "upsampler": "pad"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "reduceRow",
+            "reduce": {
+              "reducer": "mean"
+            },
+            "replaceFields": true,
+            "alias": "Hypervisor CPU (avg)"
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "text": {
+          "valueSize": 40,
+          "titleSize": 13
+        },
+        "wideLayout": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#2a78d6",
+                "value": null
+              },
+              {
+                "color": "#fab219",
+                "value": 80
+              },
+              {
+                "color": "#d03b3b",
+                "value": 90
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "timeFrom": "6h",
+      "hideTimeOverride": true
+    },
+    {
+      "id": 16,
+      "type": "stat",
+      "title": "Hypervisor memory (avg)",
+      "description": "Average memory in use across hypervisors (excluding reclaimable cache). Amber from 80%, red from 90%.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 29,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.mem.util",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "resample",
+          "expression": "A",
+          "window": "2m",
+          "downsampler": "mean",
+          "upsampler": "pad"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "reduceRow",
+            "reduce": {
+              "reducer": "mean"
+            },
+            "replaceFields": true,
+            "alias": "Hypervisor memory (avg)"
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "text": {
+          "valueSize": 40,
+          "titleSize": 13
+        },
+        "wideLayout": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "decimals": 0,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#199e70",
+                "value": null
+              },
+              {
+                "color": "#fab219",
+                "value": 80
+              },
+              {
+                "color": "#d03b3b",
+                "value": 90
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "timeFrom": "6h",
+      "hideTimeOverride": true
+    },
+    {
+      "id": 17,
+      "type": "stat",
+      "title": "Network in",
+      "description": "Total received across hypervisors (physical NICs and the libvirt NAT bridge; SR-IOV VF traffic bypasses the host and isn't included).",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 29,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "network.all.in.bytes",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "resample",
+          "expression": "A",
+          "window": "2m",
+          "downsampler": "mean",
+          "upsampler": "pad"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "reduceRow",
+            "reduce": {
+              "reducer": "sum"
+            },
+            "replaceFields": true,
+            "alias": "Network in"
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "text": {
+          "valueSize": 40,
+          "titleSize": 13
+        },
+        "wideLayout": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "decimals": null,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#d55181",
+                "value": null
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "timeFrom": "6h",
+      "hideTimeOverride": true
+    },
+    {
+      "id": 18,
+      "type": "stat",
+      "title": "Network out",
+      "description": "Total sent across hypervisors (physical NICs and the libvirt NAT bridge; SR-IOV VF traffic bypasses the host and isn't included).",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 29,
+        "w": 6,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "network.all.out.bytes",
+          "format": "time_series",
+          "legendFormat": "",
+          "hide": true
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "__expr__",
+            "uid": "__expr__"
+          },
+          "type": "resample",
+          "expression": "A",
+          "window": "2m",
+          "downsampler": "mean",
+          "upsampler": "pad"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "reduceRow",
+            "reduce": {
+              "reducer": "sum"
+            },
+            "replaceFields": true,
+            "alias": "Network out"
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "background",
+        "graphMode": "area",
+        "justifyMode": "center",
+        "textMode": "value",
+        "orientation": "auto",
+        "text": {
+          "valueSize": 40,
+          "titleSize": 13
+        },
+        "wideLayout": true
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "decimals": null,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#6250d6",
+                "value": null
+              }
+            ]
+          },
+          "mappings": []
+        },
+        "overrides": []
+      },
+      "timeFrom": "6h",
+      "hideTimeOverride": true
+    },
+    {
+      "id": 19,
+      "type": "timeseries",
+      "title": "Hypervisor network – last 6 hours",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 34,
+        "w": 12,
+        "h": 8
+      },
+      "timeFrom": "6h",
+      "hideTimeOverride": true,
+      "description": "Received above the line, sent below, per hypervisor.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "network.all.in.bytes",
+          "format": "time_series",
+          "legendFormat": "$hostname in",
+          "hide": false
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "network.all.out.bytes",
+          "format": "time_series",
+          "legendFormat": "$hostname out",
+          "hide": false
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "none"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "decimals": 1,
+          "color": {
+            "mode": "palette-classic"
+          },
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 2,
+            "fillOpacity": 30,
+            "gradientMode": "opacity",
+            "showPoints": "never",
+            "spanNulls": 60000,
+            "lineInterpolation": "smooth",
+            "axisBorderShow": false,
+            "axisCenteredZero": true
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/^hypervisor-01 /"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#3987e5"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/^hypervisor-02 /"
+            },
+            "properties": [
+              {
+                "id": "color",
+                "value": {
+                  "mode": "fixed",
+                  "fixedColor": "#d95926"
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/ out$/"
+            },
+            "properties": [
+              {
+                "id": "custom.transform",
+                "value": "negative-Y"
+              },
+              {
+                "id": "custom.fillOpacity",
+                "value": 15
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 20,
+      "type": "bargauge",
+      "title": "Top VM talkers (network, 15m avg)",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 34,
+        "w": 12,
+        "h": 8
+      },
+      "timeFrom": "15m",
+      "hideTimeOverride": true,
+      "description": "VMs moving the most traffic (virtio/tap interfaces), received and sent shown separately.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "libvirt.domstats.net.all.rx.bytes",
+          "format": "time_series",
+          "legendFormat": "in · $guest_name · $hostname",
+          "hide": false
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "libvirt.domstats.net.all.tx.bytes",
+          "format": "time_series",
+          "legendFormat": "out · $guest_name · $hostname",
+          "hide": false
+        }
+      ],
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "mean"
+            ],
+            "mode": "seriesToRows",
+            "includeTimeField": false,
+            "labelsToFields": false
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "Mean",
+                "desc": true
+              }
+            ]
+          }
+        },
+        {
+          "id": "limit",
+          "options": {
+            "limitField": 6
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "/^Mean$/",
+          "values": true
+        },
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "valueMode": "color",
+        "showUnfilled": true,
+        "namePlacement": "left",
+        "sizing": "auto"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "min": 0,
+          "decimals": 1,
+          "color": {
+            "mode": "continuous-BlPu"
+          }
+        },
+        "overrides": []
+      }
+    }
+  ]
+}

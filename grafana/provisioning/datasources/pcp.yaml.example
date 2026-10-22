@@ -1,0 +1,23 @@
+# Copy to /etc/grafana/provisioning/datasources/pcp.yaml on the collector and
+# edit: one PCP Vector datasource per hypervisor.
+apiVersion: 1
+datasources:
+  # Historical metrics for all hosts, via pmproxy + valkey on this collector
+  - name: PCP Redis
+    type: pcp-redis-datasource
+    access: proxy
+    url: http://localhost:44322
+    isDefault: true
+  # Live metrics, one datasource per hypervisor (selectable in Vector dashboards).
+  # uid must be vector-<hostname> (the name PCP reports): the Hypervisor & VM
+  # Overview dashboard selects its live VM table datasource as "vector-$host".
+  - name: PCP Vector                 # the collector itself
+    uid: vector-hypervisor-01
+    type: pcp-vector-datasource
+    access: proxy
+    url: http://localhost:44322
+  - name: PCP Vector hypervisor-02
+    uid: vector-hypervisor-02
+    type: pcp-vector-datasource
+    access: proxy
+    url: http://192.0.2.11:44322

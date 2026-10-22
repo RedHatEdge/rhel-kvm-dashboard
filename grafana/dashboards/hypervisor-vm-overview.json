@@ -1,0 +1,2127 @@
+{
+  "uid": "hv-vm-overview",
+  "title": "Hypervisor & VM Overview",
+  "description": "Ops overview of KVM hypervisors and their VMs (PCP + pmdalibvirt, historical via PCP Redis/Valkey).",
+  "tags": [
+    "pcp",
+    "libvirt",
+    "ops"
+  ],
+  "timezone": "browser",
+  "editable": true,
+  "graphTooltip": 1,
+  "refresh": "10s",
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "schemaVersion": 38,
+  "version": 1,
+  "templating": {
+    "list": [
+      {
+        "name": "datasource",
+        "label": "Datasource",
+        "type": "datasource",
+        "query": "pcp-redis-datasource",
+        "current": {
+          "text": "PCP Redis",
+          "value": "PCP Redis"
+        },
+        "hide": 2,
+        "refresh": 1,
+        "regex": "",
+        "options": []
+      },
+      {
+        "name": "host",
+        "label": "Host",
+        "type": "query",
+        "datasource": {
+          "type": "pcp-redis-datasource",
+          "uid": "${datasource}"
+        },
+        "query": "label_values(hostname)",
+        "definition": "label_values(hostname)",
+        "refresh": 1,
+        "sort": 1,
+        "multi": true,
+        "includeAll": true,
+        "current": {
+          "selected": true,
+          "text": [
+            "All"
+          ],
+          "value": [
+            "$__all"
+          ]
+        },
+        "options": [],
+        "regex": ""
+      }
+    ]
+  },
+  "annotations": {
+    "list": []
+  },
+  "links": [
+    {
+      "title": "PCP dashboards",
+      "type": "dashboards",
+      "tags": [
+        "pcp"
+      ],
+      "asDropdown": true
+    }
+  ],
+  "panels": [
+    {
+      "id": 1,
+      "type": "row",
+      "title": "Fleet overview",
+      "collapsed": false,
+      "gridPos": {
+        "x": 0,
+        "y": 0,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 2,
+      "type": "table",
+      "title": "Hypervisors",
+      "description": "Latest values for every hypervisor reporting into the collector. Click a host name to focus the dashboard on it.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 1,
+        "w": 17,
+        "h": 5
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.cpu.util",
+          "format": "time_series",
+          "legendFormat": ""
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.mem.util",
+          "format": "time_series",
+          "legendFormat": ""
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.vms.running",
+          "format": "time_series",
+          "legendFormat": ""
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.vms.stopped",
+          "format": "time_series",
+          "legendFormat": ""
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "kernel.all.load",
+          "format": "time_series",
+          "legendFormat": ""
+        },
+        {
+          "refId": "F",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "hinv.ncpu",
+          "format": "time_series",
+          "legendFormat": ""
+        },
+        {
+          "refId": "G",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "mem.physmem",
+          "format": "time_series",
+          "legendFormat": ""
+        },
+        {
+          "refId": "H",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "kernel.all.uptime",
+          "format": "time_series",
+          "legendFormat": ""
+        }
+      ],
+      "timeFrom": "5m",
+      "hideTimeOverride": true,
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "Host",
+            "desc": false
+          }
+        ]
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "noValue": "-"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Memory %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Running VMs"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Stopped VMs"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPUs"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Load 1m"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Load 15m"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 2
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Memory"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "kbytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Uptime"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "dtdurations"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Host"
+            },
+            "properties": [
+              {
+                "id": "links",
+                "value": [
+                  {
+                    "title": "Drill into ${__value.text}",
+                    "url": "/d/hv-vm-overview/hypervisor-and-vm-overview?var-host=${__value.raw}&${__url_time_range}"
+                  }
+                ]
+              }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "mode": "seriesToRows",
+            "includeTimeField": false,
+            "labelsToFields": true
+          }
+        },
+        {
+          "id": "groupingToMatrix",
+          "options": {
+            "columnField": "Field",
+            "rowField": "hostname",
+            "valueField": "Last *",
+            "emptyValue": "null"
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "kernel.all.load[5 minute]": true
+            },
+            "indexByName": {
+              "hostname\\Field": 0,
+              "ops.host.cpu.util": 1,
+              "ops.host.mem.util": 2,
+              "ops.host.vms.running": 3,
+              "ops.host.vms.stopped": 4,
+              "kernel.all.load[1 minute]": 5,
+              "kernel.all.load[15 minute]": 6,
+              "hinv.ncpu": 7,
+              "mem.physmem": 8,
+              "kernel.all.uptime": 9
+            },
+            "renameByName": {
+              "hostname\\Field": "Host",
+              "ops.host.cpu.util": "CPU %",
+              "ops.host.mem.util": "Memory %",
+              "ops.host.vms.running": "Running VMs",
+              "ops.host.vms.stopped": "Stopped VMs",
+              "kernel.all.load[1 minute]": "Load 1m",
+              "kernel.all.load[15 minute]": "Load 15m",
+              "hinv.ncpu": "CPUs",
+              "mem.physmem": "Memory",
+              "kernel.all.uptime": "Uptime"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "type": "stat",
+      "title": "Cockpit",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 17,
+        "y": 1,
+        "w": 7,
+        "h": 5
+      },
+      "timeFrom": "2m",
+      "hideTimeOverride": true,
+      "description": "Hypervisor PCP agents as seen from the collector. Click a tile to open that hypervisor's Cockpit for troubleshooting.",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "openmetrics.pcp_hosts.up",
+          "format": "time_series",
+          "legendFormat": "$instance"
+        }
+      ],
+      "transformations": [
+        {
+          "id": "reduce",
+          "options": {
+            "reducers": [
+              "lastNotNull"
+            ],
+            "mode": "seriesToRows",
+            "includeTimeField": false,
+            "labelsToFields": false
+          }
+        },
+        {
+          "id": "extractFields",
+          "options": {
+            "source": "Field",
+            "format": "kvp",
+            "replace": false
+          }
+        },
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "names": [
+                "host",
+                "address",
+                "Last *"
+              ]
+            }
+          }
+        },
+        {
+          "id": "organize",
+          "options": {
+            "indexByName": {
+              "host": 0,
+              "address": 1,
+              "Last *": 2
+            }
+          }
+        },
+        {
+          "id": "sortBy",
+          "options": {
+            "sort": [
+              {
+                "field": "host"
+              }
+            ]
+          }
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [],
+          "fields": "/^Last \\*$/",
+          "values": true
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value_and_name",
+        "orientation": "vertical",
+        "text": {
+          "valueSize": 22,
+          "titleSize": 14
+        },
+        "wideLayout": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "#898781",
+                "value": null
+              }
+            ]
+          },
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "1": {
+                  "text": "UP",
+                  "color": "#0ca30c",
+                  "index": 0
+                },
+                "0": {
+                  "text": "DOWN",
+                  "color": "#d03b3b",
+                  "index": 1
+                }
+              }
+            }
+          ],
+          "links": [
+            {
+              "title": "Open Cockpit on ${__data.fields.host}",
+              "url": "https://${__data.fields.address}:9090/",
+              "targetBlank": true
+            }
+          ]
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 4,
+      "type": "row",
+      "title": "Host: $host",
+      "collapsed": false,
+      "repeat": "host",
+      "gridPos": {
+        "x": 0,
+        "y": 7,
+        "w": 24,
+        "h": 1
+      },
+      "panels": []
+    },
+    {
+      "id": 5,
+      "type": "gauge",
+      "title": "CPU",
+      "description": "Non-idle time across all host CPUs.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 8,
+        "w": 3,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.cpu.util{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "CPU"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdMarkers": true,
+        "showThresholdLabels": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "decimals": 1,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 6,
+      "type": "gauge",
+      "title": "Memory",
+      "description": "Physical memory in use, excluding reclaimable cache.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 3,
+        "y": 8,
+        "w": 3,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.mem.util{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "Memory"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "showThresholdMarkers": true,
+        "showThresholdLabels": false
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "decimals": 1,
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 7,
+      "type": "stat",
+      "title": "Running VMs",
+      "description": "",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 8,
+        "w": 3,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.vms.running{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "Running"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 8,
+      "type": "stat",
+      "title": "Stopped VMs",
+      "description": "Defined but not running.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 9,
+        "y": 8,
+        "w": 3,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.vms.stopped{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "Stopped"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 1
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 9,
+      "type": "stat",
+      "title": "vCPUs allocated",
+      "description": "Sum of vCPUs across running VMs.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 8,
+        "w": 3,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "libvirt.dominfo.vcpu.current{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "vCPUs"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      },
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "Time",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "reduceRow",
+            "reduce": {
+              "reducer": "sum"
+            },
+            "replaceFields": true,
+            "alias": "vCPUs allocated"
+          }
+        }
+      ]
+    },
+    {
+      "id": 10,
+      "type": "stat",
+      "title": "Host CPUs",
+      "description": "",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 15,
+        "y": 8,
+        "w": 3,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "hinv.ncpu{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "CPUs"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "none",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          },
+          "decimals": 0
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 11,
+      "type": "stat",
+      "title": "VM memory allocated",
+      "description": "Sum of memory assigned to running VMs.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 8,
+        "w": 3,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "libvirt.dominfo.memory.current{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "Memory"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "kbytes",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      },
+      "transformations": [
+        {
+          "id": "joinByField",
+          "options": {
+            "byField": "Time",
+            "mode": "outer"
+          }
+        },
+        {
+          "id": "calculateField",
+          "options": {
+            "mode": "reduceRow",
+            "reduce": {
+              "reducer": "sum"
+            },
+            "replaceFields": true,
+            "alias": "VM memory allocated"
+          }
+        }
+      ]
+    },
+    {
+      "id": 12,
+      "type": "stat",
+      "title": "Uptime",
+      "description": "",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 21,
+        "y": 8,
+        "w": 3,
+        "h": 4
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "kernel.all.uptime{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "Uptime"
+        }
+      ],
+      "options": {
+        "reduceOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "fields": "",
+          "values": false
+        },
+        "colorMode": "value",
+        "graphMode": "none",
+        "justifyMode": "center",
+        "textMode": "value"
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "dtdurations",
+          "color": {
+            "mode": "thresholds"
+          },
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "text",
+                "value": null
+              }
+            ]
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 13,
+      "type": "timeseries",
+      "title": "Host CPU",
+      "description": "User time includes time spent running guest vCPUs.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 12,
+        "w": 6,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "kernel.cpu.util.user{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "user"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "kernel.cpu.util.sys{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "sys"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "kernel.cpu.util.wait{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "iowait"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "kernel.cpu.util.steal{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "steal"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 15,
+            "showPoints": "never",
+            "spanNulls": 30000,
+            "axisSoftMin": 0,
+            "stacking": {
+              "mode": "normal",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 14,
+      "type": "timeseries",
+      "title": "Host memory used",
+      "description": "",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 6,
+        "y": 12,
+        "w": 6,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.host.mem.util{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "used"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": 30000,
+            "axisSoftMin": 0,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          },
+          "max": 100
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 15,
+      "type": "timeseries",
+      "title": "Host network (physical)",
+      "description": "Physical NICs and bonds (VLAN sub-interfaces, bridges and vnets hidden). Transmit is drawn below zero. SR-IOV VF traffic bypasses the host stack and is NOT included.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 12,
+        "y": 12,
+        "w": 6,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "network.interface.in.bytes{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "$instance rx"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "network.interface.out.bytes{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "$instance tx"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": 30000,
+            "axisSoftMin": 0,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/ tx$/"
+            },
+            "properties": [
+              {
+                "id": "custom.transform",
+                "value": "negative-Y"
+              }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "filterFieldsByName",
+          "options": {
+            "include": {
+              "pattern": "^([Tt]ime|(en|eth|bond)[^. ]* (rx|tx))$"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": 16,
+      "type": "timeseries",
+      "title": "Host disk",
+      "description": "Write is drawn below zero.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 18,
+        "y": 12,
+        "w": 6,
+        "h": 7
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "disk.all.read_bytes{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "read"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "disk.all.write_bytes{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "write"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "KBs",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": 30000,
+            "axisSoftMin": 0,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/^write$/"
+            },
+            "properties": [
+              {
+                "id": "custom.transform",
+                "value": "negative-Y"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 17,
+      "type": "table",
+      "title": "Virtual machines on $host (live)",
+      "datasource": {
+        "type": "pcp-vector-datasource",
+        "uid": "vector-$host"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 19,
+        "w": 24,
+        "h": 8
+      },
+      "description": "Running VMs on this host, live from its pmproxy. CPU % is relative to the VM's own vCPUs; Memory % is the qemu process RSS on the host relative to the VM's assigned memory. Network covers virtio/tap interfaces only (SR-IOV VFs are not visible to libvirt).",
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-vector-datasource",
+            "uid": "vector-$host"
+          },
+          "expr": "libvirt.dominfo.name",
+          "format": "metrics_table",
+          "legendFormat": "VM"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "pcp-vector-datasource",
+            "uid": "vector-$host"
+          },
+          "expr": "ops.vm.cpu.util",
+          "format": "metrics_table",
+          "legendFormat": "CPU %"
+        },
+        {
+          "refId": "C",
+          "datasource": {
+            "type": "pcp-vector-datasource",
+            "uid": "vector-$host"
+          },
+          "expr": "ops.vm.mem.util",
+          "format": "metrics_table",
+          "legendFormat": "Memory %"
+        },
+        {
+          "refId": "D",
+          "datasource": {
+            "type": "pcp-vector-datasource",
+            "uid": "vector-$host"
+          },
+          "expr": "libvirt.dominfo.vcpu.current",
+          "format": "metrics_table",
+          "legendFormat": "vCPUs"
+        },
+        {
+          "refId": "E",
+          "datasource": {
+            "type": "pcp-vector-datasource",
+            "uid": "vector-$host"
+          },
+          "expr": "libvirt.dominfo.memory.current",
+          "format": "metrics_table",
+          "legendFormat": "Memory"
+        },
+        {
+          "refId": "F",
+          "datasource": {
+            "type": "pcp-vector-datasource",
+            "uid": "vector-$host"
+          },
+          "expr": "libvirt.domstats.block.all.rd.bytes",
+          "format": "metrics_table",
+          "legendFormat": "Disk read"
+        },
+        {
+          "refId": "G",
+          "datasource": {
+            "type": "pcp-vector-datasource",
+            "uid": "vector-$host"
+          },
+          "expr": "libvirt.domstats.block.all.wr.bytes",
+          "format": "metrics_table",
+          "legendFormat": "Disk write"
+        },
+        {
+          "refId": "H",
+          "datasource": {
+            "type": "pcp-vector-datasource",
+            "uid": "vector-$host"
+          },
+          "expr": "libvirt.domstats.net.all.rx.bytes",
+          "format": "metrics_table",
+          "legendFormat": "Net rx"
+        },
+        {
+          "refId": "I",
+          "datasource": {
+            "type": "pcp-vector-datasource",
+            "uid": "vector-$host"
+          },
+          "expr": "libvirt.domstats.net.all.tx.bytes",
+          "format": "metrics_table",
+          "legendFormat": "Net tx"
+        },
+        {
+          "refId": "J",
+          "datasource": {
+            "type": "pcp-vector-datasource",
+            "uid": "vector-$host"
+          },
+          "expr": "libvirt.domstats.net.all.rx.drop",
+          "format": "metrics_table",
+          "legendFormat": "Net drops rx"
+        },
+        {
+          "refId": "K",
+          "datasource": {
+            "type": "pcp-vector-datasource",
+            "uid": "vector-$host"
+          },
+          "expr": "libvirt.domstats.net.all.tx.drop",
+          "format": "metrics_table",
+          "legendFormat": "Net drops tx"
+        }
+      ],
+      "options": {
+        "showHeader": true,
+        "cellHeight": "sm",
+        "footer": {
+          "show": false
+        },
+        "sortBy": [
+          {
+            "displayName": "CPU %",
+            "desc": true
+          }
+        ]
+      },
+      "fieldConfig": {
+        "defaults": {
+          "custom": {
+            "align": "auto",
+            "cellOptions": {
+              "type": "auto"
+            },
+            "inspect": false
+          },
+          "decimals": 1,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              {
+                "color": "green",
+                "value": null
+              },
+              {
+                "color": "#EAB839",
+                "value": 70
+              },
+              {
+                "color": "red",
+                "value": 90
+              }
+            ]
+          },
+          "noValue": "-"
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "VM"
+            },
+            "properties": [
+              {
+                "id": "custom.width",
+                "value": 200
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "CPU %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Memory %"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "percent"
+              },
+              {
+                "id": "min",
+                "value": 0
+              },
+              {
+                "id": "max",
+                "value": 100
+              },
+              {
+                "id": "decimals",
+                "value": 1
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "gauge",
+                  "mode": "basic",
+                  "valueDisplayMode": "text"
+                }
+              },
+              {
+                "id": "custom.width",
+                "value": 170
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "vCPUs"
+            },
+            "properties": [
+              {
+                "id": "decimals",
+                "value": 0
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Memory"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "kbytes"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Disk read"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "Bps"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Disk write"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "Bps"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Net rx"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "Bps"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Net tx"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "Bps"
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Net drops rx"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "pps"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          },
+          {
+            "matcher": {
+              "id": "byName",
+              "options": "Net drops tx"
+            },
+            "properties": [
+              {
+                "id": "unit",
+                "value": "pps"
+              },
+              {
+                "id": "decimals",
+                "value": 0
+              },
+              {
+                "id": "custom.cellOptions",
+                "value": {
+                  "type": "color-text"
+                }
+              },
+              {
+                "id": "thresholds",
+                "value": {
+                  "mode": "absolute",
+                  "steps": [
+                    {
+                      "color": "text",
+                      "value": null
+                    },
+                    {
+                      "color": "red",
+                      "value": 1
+                    }
+                  ]
+                }
+              }
+            ]
+          }
+        ]
+      },
+      "transformations": [
+        {
+          "id": "organize",
+          "options": {
+            "excludeByName": {
+              "instance": true
+            },
+            "indexByName": {},
+            "renameByName": {}
+          }
+        }
+      ]
+    },
+    {
+      "id": 18,
+      "type": "timeseries",
+      "title": "VM CPU",
+      "description": "Percent of each VM's allocated vCPUs.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 0,
+        "y": 27,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "ops.vm.cpu.util{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "$guest_name"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percent",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": 30000,
+            "axisSoftMin": 0,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": []
+      }
+    },
+    {
+      "id": 19,
+      "type": "timeseries",
+      "title": "VM disk throughput",
+      "description": "Write is drawn below zero.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 8,
+        "y": 27,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "libvirt.domstats.block.all.rd.bytes{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "$guest_name read"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "libvirt.domstats.block.all.wr.bytes{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "$guest_name write"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": 30000,
+            "axisSoftMin": 0,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/ write$/"
+            },
+            "properties": [
+              {
+                "id": "custom.transform",
+                "value": "negative-Y"
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": 20,
+      "type": "timeseries",
+      "title": "VM network throughput",
+      "description": "Transmit is drawn below zero. virtio/tap interfaces only.",
+      "datasource": {
+        "type": "pcp-redis-datasource",
+        "uid": "${datasource}"
+      },
+      "gridPos": {
+        "x": 16,
+        "y": 27,
+        "w": 8,
+        "h": 8
+      },
+      "targets": [
+        {
+          "refId": "A",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "libvirt.domstats.net.all.rx.bytes{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "$guest_name rx"
+        },
+        {
+          "refId": "B",
+          "datasource": {
+            "type": "pcp-redis-datasource",
+            "uid": "${datasource}"
+          },
+          "expr": "libvirt.domstats.net.all.tx.bytes{hostname == \"$host\"}",
+          "format": "time_series",
+          "legendFormat": "$guest_name tx"
+        }
+      ],
+      "options": {
+        "legend": {
+          "displayMode": "list",
+          "placement": "bottom",
+          "showLegend": true
+        },
+        "tooltip": {
+          "mode": "multi",
+          "sort": "desc"
+        }
+      },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "Bps",
+          "custom": {
+            "drawStyle": "line",
+            "lineWidth": 1,
+            "fillOpacity": 8,
+            "showPoints": "never",
+            "spanNulls": 30000,
+            "axisSoftMin": 0,
+            "stacking": {
+              "mode": "none",
+              "group": "A"
+            }
+          },
+          "color": {
+            "mode": "palette-classic"
+          }
+        },
+        "overrides": [
+          {
+            "matcher": {
+              "id": "byRegexp",
+              "options": "/ tx$/"
+            },
+            "properties": [
+              {
+                "id": "custom.transform",
+                "value": "negative-Y"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

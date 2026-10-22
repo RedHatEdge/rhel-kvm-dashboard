@@ -1,0 +1,9 @@
+# Load every dashboard JSON in /etc/grafana/dashboards/pcp into a "PCP" folder
+apiVersion: 1
+providers:
+  - name: pcp-host-overview
+    folder: PCP
+    type: file
+    allowUiUpdates: false
+    options:
+      path: /etc/grafana/dashboards/pcp
