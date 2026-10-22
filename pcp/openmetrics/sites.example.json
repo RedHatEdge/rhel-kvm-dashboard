@@ -1,0 +1,4 @@
+{
+  "hypervisor-01": {"site": "Houston", "lat": 29.7604, "lon": -95.3698, "address": "192.0.2.10"},
+  "hypervisor-02": {"site": "Houston", "lat": 29.7604, "lon": -95.3698, "address": "192.0.2.11"}
+}

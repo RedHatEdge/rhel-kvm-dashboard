@@ -1,0 +1,50 @@
+#!/usr/bin/python3
+#
+# Scripted source for pmdaopenmetrics: the state of every libvirt domain,
+# including shut-off ones (pmdalibvirt only reports running domains).
+# Runs as user pcp on each fetch, over the read-only libvirt socket.
+#
+# Uses the libvirt Python bindings rather than virsh: SELinux doesn't allow
+# pmcd's domain (pcp_pmcd_t) to execute virsh, but does allow it to talk to
+# libvirt (pmdalibvirt relies on the same thing).
+#
+# Exported as openmetrics.libvirt_vms.state, one instance per domain,
+# labelled guest_name (same label pmdalibvirt uses) and autostart (yes/no).
+# Value is the libvirt domain state code:
+#   1 running, 2 blocked, 3 paused, 4 shutting down, 5 shut off,
+#   6 crashed, 7 suspended (pmsuspended), 0 unknown
+#
+import sys
+
+import libvirt
+
+libvirt.registerErrorHandler(lambda ctx, err: None, None)   # keep libvirt chatter off stdout
+try:
+    conn = libvirt.openReadOnly("qemu:///system")
+except libvirt.libvirtError as e:
+    sys.stderr.write("libvirt_vms: %s\n" % e)
+    sys.exit(1)
+
+domains = [(dom.name(), dom.state()[0], bool(dom.autostart())) for dom in conn.listAllDomains()]
+conn.close()
+
+print("# HELP state libvirt domain state (1 running, 2 blocked, 3 paused, 4 shutting down, "
+      "5 shut off, 6 crashed, 7 suspended)")
+print("# TYPE state gauge")
+for name, state, auto in domains:
+    print('state{guest_name="%s",autostart="%s"} %d' % (name, "yes" if auto else "no", state))
+
+# Per-host totals as label-free metrics: one series per host, which Grafana
+# server-side expressions need (the per-VM instances above all share the same
+# pmseries labels, see the dashboard notes)
+running = sum(1 for _, state, _ in domains if state == libvirt.VIR_DOMAIN_RUNNING)
+down_auto = sum(1 for _, state, auto in domains if auto and state != libvirt.VIR_DOMAIN_RUNNING)
+for metric, help_text, value in (
+        ("vms_defined", "number of defined VMs", len(domains)),
+        ("vms_running", "number of running VMs", running),
+        ("vms_down_autostart", "number of autostart VMs that are not running", down_auto),
+        ("vms_stopped", "number of non-autostart VMs that are not running (stopped on purpose)",
+         len(domains) - running - down_auto)):
+    print("# HELP %s %s" % (metric, help_text))
+    print("# TYPE %s gauge" % metric)
+    print("%s %d" % (metric, value))

@@ -1,0 +1,150 @@
+#!/usr/bin/python3
+#
+# Scripted source for pmdaopenmetrics on the collector: is each hypervisor
+# that this collector's pmlogger farm logs reachable, and is it healthy?
+# An offline host just stops reporting, which nothing else can tell apart
+# from "no data".
+#
+# Hosts come from the pmlogger control files: remote entries in
+# /etc/pcp/pmlogger/control.d/* (named by the basename of their archive
+# directory, e.g. PCP_ARCHIVE_DIR/hypervisor-02 -> hypervisor-02) plus this host.
+# A host is "up" if its pmcd port accepts a TCP connection within 2 seconds.
+# Locations for the status map come from sites.json next to this script
+# ({"<host>": {"site": "Houston", "lat": 29.76, "lon": -95.37, "address": "192.0.2.10"}, ...});
+# "address" is the management address dashboards link to (e.g. Cockpit on :9090)
+# and overrides the pmlogger control address in the up{} labels.
+# Prints nothing on hosts without remote entries (i.e. agents).
+#
+# Exported (as openmetrics.pcp_hosts.*):
+#   up{host,address}            1 reachable / 0 not
+#   status{host,site,lat,lon}   0 healthy, 2 autostart VMs down, 3 offline
+#                               (hosts with a location in sites.json only)
+#   hosts_total, hosts_up, hosts_down   label-free totals
+#   fleet_vms_running, fleet_vms_down   VMs across reachable hosts (one series, so
+#                               dashboards can chart fleet totals without summing
+#                               series that are sampled at different instants)
+#
+# Scaling note: every fetch opens a PMAPI context to each reachable remote
+# host; fine for tens of hosts, not for thousands.
+#
+import glob
+import json
+import os
+import socket
+
+os.environ.setdefault("PMCD_CONNECT_TIMEOUT", "2")
+os.environ.setdefault("PMCD_REQUEST_TIMEOUT", "3")
+
+PMCD_PORT = 44321
+TIMEOUT = 2.0
+SITES = os.path.join(os.path.dirname(os.path.realpath(__file__)), "sites.json")
+HEALTHY, VMS_DOWN, OFFLINE = 0, 2, 3
+
+
+def farm_hosts():
+    hosts = []
+    for path in sorted(glob.glob("/etc/pcp/pmlogger/control.d/*")):
+        try:
+            lines = open(path).read().splitlines()
+        except OSError:
+            continue
+        for line in lines:
+            fields = line.split()
+            if not fields or fields[0].startswith(("#", "$")) or len(fields) < 4:
+                continue
+            address, directory = fields[0], fields[3]
+            if address == "LOCALHOSTNAME":
+                continue
+            hosts.append((os.path.basename(directory.rstrip("/")), address))
+    return hosts
+
+
+def reachable(address):
+    try:
+        with socket.create_connection((address, PMCD_PORT), timeout=TIMEOUT):
+            return True
+    except OSError:
+        return False
+
+
+def vm_counts_local():
+    # this script runs inside the local openmetrics PMDA, so ask libvirt directly
+    # rather than fetching openmetrics.* from our own (busy) PMDA
+    import libvirt
+    libvirt.registerErrorHandler(lambda ctx, err: None, None)
+    conn = libvirt.openReadOnly("qemu:///system")
+    try:
+        doms = [(d.state()[0], d.autostart()) for d in conn.listAllDomains()]
+    finally:
+        conn.close()
+    running = sum(1 for state, _ in doms if state == libvirt.VIR_DOMAIN_RUNNING)
+    down = sum(1 for state, auto in doms if auto and state != libvirt.VIR_DOMAIN_RUNNING)
+    return running, down
+
+
+def vm_counts_remote(address):
+    from pcp import pmapi
+    import cpmapi as c_api
+    ctx = pmapi.pmContext(c_api.PM_CONTEXT_HOST, address)
+    names = ("openmetrics.libvirt_vms.vms_running", "openmetrics.libvirt_vms.vms_down_autostart")
+    pmids = ctx.pmLookupName(names)
+    descs = ctx.pmLookupDescs(pmids)
+    result = ctx.pmFetch(pmids)
+    values = []
+    for i, desc in enumerate(descs):
+        if result.contents.get_vset(i).numval < 1:
+            values.append(0)
+            continue
+        atom = ctx.pmExtractValue(result.contents.get_valfmt(i), result.contents.get_vlist(i, 0),
+                                  desc.contents.type, c_api.PM_TYPE_DOUBLE)
+        values.append(int(atom.d))
+    return tuple(values)
+
+
+def vm_counts(address, local):
+    """(running, autostart-but-down) VMs on a reachable host."""
+    try:
+        return vm_counts_local() if local else vm_counts_remote(address)
+    except Exception:      # host without libvirt/openmetrics: don't flag it
+        return 0, 0
+
+
+def gauge(name, help_text):
+    print("# HELP %s %s" % (name, help_text))
+    print("# TYPE %s gauge" % name)
+
+
+remote = farm_hosts()
+if remote:
+    try:
+        sites = json.load(open(SITES))
+    except (OSError, ValueError):
+        sites = {}
+    status = [(socket.gethostname().split(".")[0], "localhost", True, True)]
+    status += [(name, address, reachable(address), False) for name, address in remote]
+    mgmt = {name: sites.get(name, {}).get("address", address) for name, address, _, _ in status}
+    up = sum(1 for _, _, ok, _ in status if ok)
+    counts = {name: vm_counts(address, local) for name, address, ok, local in status if ok}
+
+    gauge("up", "1 if the hypervisor's pmcd is reachable from the collector")
+    for name, address, ok, _ in status:
+        print('up{host="%s",address="%s"} %d' % (name, mgmt[name], 1 if ok else 0))
+
+    gauge("status", "hypervisor status for the map: 0 healthy, 2 autostart VMs down, 3 offline")
+    for name, address, ok, local in status:
+        loc = sites.get(name)
+        if not loc:
+            continue
+        code = OFFLINE if not ok else (VMS_DOWN if counts[name][1] > 0 else HEALTHY)
+        print('status{host="%s",site="%s",lat="%s",lon="%s"} %d'
+              % (name, str(loc["site"]).replace(" ", "_"), loc["lat"], loc["lon"], code))
+
+    for metric, help_text, value in (("hosts_total", "hypervisors this collector expects", len(status)),
+                                     ("hosts_up", "hypervisors reachable", up),
+                                     ("hosts_down", "hypervisors not reachable", len(status) - up),
+                                     ("fleet_vms_running", "running VMs on reachable hypervisors",
+                                      sum(c[0] for c in counts.values())),
+                                     ("fleet_vms_down", "autostart VMs not running, on reachable hypervisors",
+                                      sum(c[1] for c in counts.values()))):
+        gauge(metric, help_text)
+        print("%s %d" % (metric, value))

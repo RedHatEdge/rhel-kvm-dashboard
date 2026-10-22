@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+# your real site inventory (hostnames, management addresses, coordinates);
+# the repo ships pcp/openmetrics/sites.example.json
+pcp/openmetrics/sites.json
+build/
