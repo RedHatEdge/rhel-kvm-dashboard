@@ -1,0 +1,94 @@
+# Reference bootc image for a RHEL KVM hypervisor, monitored by rhel-kvm-dashboard.
+#
+# KVM/QEMU + libvirt, the Cockpit web console (with VM management and PCP-backed
+# metrics history), firewalld, and the full PCP + Grafana monitoring stack from
+# this repository, configured for image mode.
+#
+# Build from the repository root on a subscribed RHEL host. podman passes the
+# host's RHEL entitlement into the build, so no credentials belong in this file:
+#
+#   podman login registry.redhat.io
+#   podman build -f bootc/Containerfile -t registry.example.com/rhel-kvm-image:1.0 .
+#
+# Every hypervisor runs the same image. The collector role (Valkey, Grafana, the
+# pmlogger farm) is switched on after deployment on one host: see docs/setup.md,
+# "B2. Collector post-deploy config". Put your pcp/openmetrics/sites.json in place
+# before building (the example inventory is used otherwise); it drives the Cockpit
+# links, the maps and the dashboards' host order.
+
+# Pin a minor release (e.g. :9.6) for reproducible builds.
+FROM registry.redhat.io/rhel9/rhel-bootc:latest
+
+# ---------------------------------------------------------------- packages ---
+# (cockpit-pcp's scriptlet reports an error: it restarts pmlogger, and there is no
+# running systemd in an image build. Harmless; pmlogger starts at boot.)
+RUN dnf -y install \
+        # virtualization: KVM/QEMU, libvirt (modular daemons), UEFI firmware, installer
+        qemu-kvm libvirt virt-install edk2-ovmf \
+        # web console: VM management, plus metrics history from PCP
+        cockpit cockpit-machines cockpit-pcp \
+        # monitoring: PCP with per-VM metrics; Grafana + Valkey (used on the collector only)
+        pcp pcp-zeroconf pcp-pmda-libvirt python3-libvirt \
+        grafana grafana-pcp valkey \
+        # host firewall
+        firewalld \
+    && dnf clean all \
+    && rm -rf /var/cache/* /var/log/dnf* /var/log/hawkey.log /var/log/rhsm /var/lib/dnf \
+    # runtime files left by package scriptlets (/run is a tmpfs at boot anyway)
+    && rm -rf /run/cockpit /run/rhsm /run/setroubleshoot
+
+# ------------------------------------------------------------- monitoring ----
+COPY . /tmp/rhel-kvm-dashboard
+RUN set -eux; \
+    cd /tmp/rhel-kvm-dashboard; \
+    # pmcd: accept remote connections (the collector's pmlogger farm pulls from it).
+    # pmproxy: no local Valkey on agents; the collector turns [keys] back on (B2).
+    sed -i 's/^PMCD_LOCAL=1/PMCD_LOCAL=0/' /etc/sysconfig/pmcd; \
+    sed -i '/^\[keys\]/,/^\[/ s/^enabled = true/enabled = false/' /etc/pcp/pmproxy/pmproxy.conf; \
+    # derived metrics, pmlogconf group, OpenMetrics scripted sources, site inventory
+    install -m 0644 pcp/derived/ops-overview.conf /etc/pcp/derived/ops-overview.conf; \
+    install -D -m 0644 pcp/pmlogconf/ops/overview /etc/pcp/pmlogconf/ops/overview; \
+    install -m 0755 pcp/openmetrics/libvirt_vms.python pcp/openmetrics/pcp_hosts.python /etc/pcp/openmetrics/; \
+    sites=pcp/openmetrics/sites.json; [ -f "$sites" ] || sites=pcp/openmetrics/sites.example.json; \
+    install -m 0644 "$sites" /etc/pcp/openmetrics/sites.json; \
+    # /var/lib/pcp links; the openmetrics override must shadow the package's same-named file
+    install -m 0644 pcp/tmpfiles.d/pcp-ops-overview.conf /usr/lib/tmpfiles.d/pcp-ops-overview.conf; \
+    install -m 0644 pcp/tmpfiles.d/pcp-pmda-openmetrics.conf /etc/tmpfiles.d/pcp-pmda-openmetrics.conf; \
+    # Grafana: PCP app plugin + file dashboard provider (datasources are per site, see B2)
+    install -m 0640 -g grafana grafana/provisioning/plugins/pcp.yaml /etc/grafana/provisioning/plugins/pcp.yaml; \
+    install -m 0640 -g grafana grafana/provisioning/dashboards/pcp.yaml /etc/grafana/provisioning/dashboards/pcp.yaml; \
+    # dashboards, generated for the inventory baked in above
+    mkdir -p /etc/grafana/dashboards/pcp; \
+    for d in gen_dashboard:hypervisor-vm-overview gen_fleet_dashboard:fleet-health gen_status_dashboard:ops-status; do \
+        PCP_SITES=/etc/pcp/openmetrics/sites.json python3 "grafana/${d%%:*}.py" > "/etc/grafana/dashboards/pcp/${d##*:}.json"; \
+    done; \
+    # PCP's own Host Overview dashboards, with the fixed uid provisioning needs
+    for ds in vector redis; do \
+        python3 -c 'import json,sys; d=json.load(open(sys.argv[1])); d["uid"]=sys.argv[2]; json.dump(d,sys.stdout,indent=2)' \
+            "/usr/share/performancecopilot-pcp-app/datasources/$ds/dashboards/pcp-$ds-host-overview.json" \
+            "pcp-$ds-host-overview" > "/etc/grafana/dashboards/pcp/pcp-$ds-host-overview.json"; \
+    done; \
+    # PMDA Install scripts need a running pmcd: register libvirt + openmetrics on first boot
+    install -m 0644 bootc/pcp-pmda-install.service /usr/lib/systemd/system/pcp-pmda-install.service; \
+    # don't ship a build-time Grafana database; grafana-server creates its own on first start
+    rm -f /var/lib/grafana/grafana.db; \
+    cd /; rm -rf /tmp/rhel-kvm-dashboard
+
+# --------------------------------------------------------------- firewall ----
+# Cockpit (9090), pmcd (44321, for the collector's farm), pmproxy (44322, live
+# Grafana data) and Grafana (3000, only listening on the collector)
+RUN firewall-offline-cmd --add-service=cockpit --add-service=pmcd --add-service=pmproxy --add-service=grafana
+
+# --------------------------------------------------------------- services ----
+# Package scriptlets don't enable these in an image build, so enable them here
+# (creates the symlinks in the image's /etc). Valkey, grafana-server and
+# pmlogger_farm stay off until a host becomes the collector.
+RUN systemctl enable \
+        sshd.service firewalld.service cockpit.socket \
+        virtqemud.socket virtqemud-ro.socket virtqemud-admin.socket \
+        virtnetworkd.socket virtstoraged.socket virtnodedevd.socket \
+        virtsecretd.socket virtinterfaced.socket virtnwfilterd.socket virtproxyd.socket \
+        pmcd.service pmlogger.service pmlogger_check.timer pmlogger_daily.timer \
+        pmproxy.service pcp-pmda-install.service
+
+RUN bootc container lint

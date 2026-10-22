@@ -1,0 +1,18 @@
+# Register the PCP libvirt and openmetrics PMDAs with pmcd on first boot.
+# Their Install scripts need a running pmcd, so they can't run during the image
+# build. Each PMDA's pmns file is its "already installed" marker; the "|"
+# prefix makes the two conditions OR, so the unit runs if either is missing.
+[Unit]
+Description=Register the PCP libvirt and openmetrics PMDAs with pmcd
+After=pmcd.service virtqemud.socket
+Requires=pmcd.service
+ConditionPathExists=|!/var/lib/pcp/pmns/libvirt
+ConditionPathExists=|!/var/lib/pcp/pmns/openmetrics
+
+[Service]
+Type=oneshot
+ExecStart=/bin/sh -c 'for p in libvirt openmetrics; do [ -f /var/lib/pcp/pmns/$p ] || (cd /var/lib/pcp/pmdas/$p && ./Install </dev/null); done'
+ExecStartPost=/usr/bin/systemctl try-restart pmproxy.service
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,5 @@
+# keep the image build context to what bootc/Containerfile uses
+.git
+build
+docs/images
+**/__pycache__

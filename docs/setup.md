@@ -429,7 +429,33 @@ and enabling Valkey and Grafana.
 
 ### B1. Containerfile additions
 
-Add this to your bootc image's `Containerfile`. Copy this repo (with your
+**Quickest route:** build [`bootc/Containerfile`](../bootc/Containerfile), a
+complete reference hypervisor image: KVM/QEMU, libvirt with modular daemons,
+Cockpit with `cockpit-machines` and `cockpit-pcp`, firewalld, and everything
+below. It was test-built from `rhel-bootc` 9.8 and passes
+`bootc container lint`. Build it from the repo root on a subscribed RHEL
+host:
+
+```bash
+cp pcp/openmetrics/sites.example.json pcp/openmetrics/sites.json   # then edit
+podman login registry.redhat.io
+podman build -f bootc/Containerfile -t registry.example.com/rhel-kvm-image:1.0 .
+```
+
+Notes from building it:
+
+- `cockpit-pcp`'s scriptlet prints an error (it restarts pmlogger, and an
+  image build has no running systemd). It's harmless.
+- Package scriptlets leave files in `/run` (Cockpit banner files,
+  `/run/rhsm`). The Containerfile removes them, and also deletes the
+  `grafana.db` that the Grafana packages create, so that grafana-server
+  starts from a clean database on first boot.
+- It enables libvirt's modular daemons (`virtqemud.socket`,
+  `virtqemud-ro.socket`, …), RHEL 9's default. The VM-state script
+  connects read-only, so it needs `virtqemud-ro.socket`.
+
+**To extend an existing image** instead, add the following to its
+`Containerfile`. Copy this repo (with your
 `sites.json`, and dashboards built by `make dashboards`) into the build
 context first:
 
@@ -521,10 +547,10 @@ RUN ln -sf /usr/lib/systemd/system/pmcd.service            /etc/systemd/system/m
     ln -sf /usr/lib/systemd/system/pcp-pmda-install.service /etc/systemd/system/multi-user.target.wants/pcp-pmda-install.service
 ```
 
-> The VM-monitoring additions are untested as an image build. The live
-> equivalent (A5) is what's verified. In particular, check after the first
-> boot that `pminfo libvirt | wc -l` returns 137 and that
-> `pminfo -f openmetrics.libvirt_vms.state` lists every VM.
+> The reference `bootc/Containerfile` has been test-built and linted, but
+> not booted yet; the live equivalent (A5) is what's verified end to end.
+> After the first boot, check that `pminfo libvirt | wc -l` returns 137 and
+> that `pminfo -f openmetrics.libvirt_vms.state` lists every VM.
 
 The explicit symlinks matter, not just the presets. Presets only apply on
 first boot of a fresh install. Symlinks in the image's `/etc` are carried

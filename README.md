@@ -94,14 +94,54 @@ grafana/
   gen_status_dashboard.py      → Ops Status
   dashboards/                  built dashboards (from the example inventory)
   provisioning/                Grafana provisioning files
+bootc/
+  Containerfile                reference bootc image: KVM/QEMU, libvirt, Cockpit, firewalld + this monitoring stack
+  pcp-pmda-install.service     first-boot unit that registers the libvirt/openmetrics PMDAs
 demo/                          synthetic-load demo VMs (cloud-init) for testing
 Makefile                       make dashboards / make example-dashboards
 ```
 
+## bootc hypervisor image
+
+**[`bootc/Containerfile`](bootc/Containerfile)** is a complete reference image
+for an image-mode RHEL KVM hypervisor, with this monitoring stack built in:
+
+- **Virtualization:** `qemu-kvm`, `libvirt` (modular daemons:
+  `virtqemud` and friends, socket-activated), `virt-install`, `edk2-ovmf`
+  for UEFI guests.
+- **Cockpit:** `cockpit`, `cockpit-machines` (VM management) and
+  `cockpit-pcp` (Cockpit's metrics history comes from the same PCP
+  archives).
+- **Monitoring:** `pcp`, `pcp-zeroconf`, `pcp-pmda-libvirt`, `grafana`,
+  `grafana-pcp`, `valkey`, plus all of this repo's PCP config, the Grafana
+  provisioning, and dashboards generated at build time from your
+  `sites.json`.
+- **Host config:** `firewalld` with Cockpit, pmcd, pmproxy and Grafana open,
+  and services enabled explicitly (image builds don't run the packages'
+  enablement). A first-boot unit registers the libvirt and OpenMetrics
+  PMDAs, which need a running `pmcd`.
+
+```bash
+# on a subscribed RHEL host (the build uses the host's entitlement; no credentials in the file)
+cp pcp/openmetrics/sites.example.json pcp/openmetrics/sites.json   # then edit
+podman login registry.redhat.io
+podman build -f bootc/Containerfile -t registry.example.com/rhel-kvm-image:1.0 .
+```
+
+Every hypervisor runs the same image. On the one host chosen as the
+collector, turn on Valkey, Grafana and the pmlogger farm after deployment
+(docs/setup.md, *B2*).
+
+Test-built from `rhel-bootc` 9.8: `bootc container lint` passes 11 checks.
+The two remaining warnings come from RHEL's own packages (libvirt's
+`libvirtdbus` user, and package-created `/var` directories). A booted
+deployment of this exact image hasn't been tested yet; the same
+configuration is running live (Approach A).
+
 ## Quick start
 
-The outline is below; [docs/setup.md](docs/setup.md) has every command, and a
-bootc `Containerfile` variant.
+The outline is below; [docs/setup.md](docs/setup.md) has every command. For
+new hosts, the bootc image above does steps 1, 2 and 4 for you.
 
 1. **Packages, on every hypervisor:** `pcp pcp-zeroconf pcp-pmda-libvirt
    grafana grafana-pcp valkey` (via `rpm-ostree install --apply-live`, `dnf`,
