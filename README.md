@@ -7,6 +7,25 @@ on package-mode RHEL.
 
 ![Ops Status dashboard: overall fleet status, site maps, hypervisor tiles, issue lists and throughput](docs/images/ops-status.png)
 
+**Highlights**
+
+- **Three dashboards** for three audiences: a wall-screen status board with
+  site maps, a fleet-wide outlier view, and a per-hypervisor drill-down
+  (see [Screenshots](#screenshots)).
+- **VM-aware monitoring**: per-VM CPU, memory, disk and network. Detects VMs
+  that are down but set to autostart, and hypervisors that have gone offline,
+  not just missing data.
+- **Cockpit integration**: every hypervisor tile clicks through to that
+  host's Cockpit for troubleshooting. With `cockpit-pcp`, Cockpit's own
+  metrics history uses the same PCP data.
+- **Reference bootc image**: [`bootc/Containerfile`](bootc/Containerfile)
+  builds a complete image-mode hypervisor (KVM/QEMU, libvirt, Cockpit,
+  firewalld and this monitoring stack), test-built and lint-checked
+  against `rhel-bootc` 9.8 ([details](#bootc-hypervisor-image)).
+- **RHEL-native**: everything comes from AppStream packages, and works in image
+  mode (bootc) and package mode. The [setup guide](docs/setup.md) records
+  every image-mode pitfall and its fix.
+
 Every hypervisor runs the PCP collector. One of them (the *collector*) also
 logs every hypervisor centrally into Valkey and serves Grafana. Three
 dashboards cover three audiences:
